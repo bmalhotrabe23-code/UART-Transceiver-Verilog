@@ -1,60 +1,56 @@
-# UART Communication Controller
+# UART Communication Controller using Verilog HDL
 
-A Verilog UART project with:
+## Overview
 
-- a baud rate generator
-- a UART transmitter
-- a UART receiver
-- a loopback testbench
+A UART (Universal Asynchronous Receiver Transmitter) communication system implemented in Verilog HDL. The design includes a baud rate generator, UART transmitter, UART receiver, and a loopback testbench for functional verification.
 
-In the current testbench, the transmitter output is connected directly to the receiver input, so the design can be tested completely in simulation.
+## Features
+
+- UART Transmitter (TX)
+- UART Receiver (RX)
+- Baud Rate Generator
+- FSM-based communication control
+- Loopback verification environment
+- Simulation waveform generation
+
+## Project Structure
+
+- uart_tx.v : UART transmitter module
+- uart_rx.v : UART receiver module
+- baud_gen.v : Baud rate generation module
+- uart_tb.v : Verification testbench
+
+## Architecture
 
 ### UART Block Diagram
 
 ![UART Block Diagram](uart.png)
 
-### FSM Block Diagram
+### FSM Diagram
 
-![FSM Block Diagram](fsm.png)
+![FSM Diagram](fsm.png)
+
+## Verification
+
+The transmitter output is connected directly to the receiver input in the testbench. Data transmitted by the UART transmitter is received and verified by the UART receiver.
 
 ### Simulation Waveform
 
 ![Simulation Waveform](waveform.png)
 
-## Running the Simulation
+## Tools Used
 
-This project works with Icarus Verilog.
+- Verilog HDL
+- Icarus Verilog
+- GTKWave
 
-### Compile
+## Future Enhancements
 
-```powershell
-iverilog -o uart_check.out uart_tb.v uart_tx.v uart_rx.v baud_gen.v
-```
-
-### Run
-
-```powershell
-vvp uart_check.out
-```
-
-## Viewing the Waveform
-
-The testbench generates a waveform file named `wave.vcd`.
-
-You can open it with GTKWave:
-
-```powershell
-gtkwave wave.vcd
-```
-
-## Future Improvements
-
-- Add support for multiple test cases
-- Test different bytes automatically
-- Add parity support
-- Add configurable baud divisor calculation
-- Improve the receiver sampling strategy for a more realistic UART design
+- Parity bit support
+- Configurable baud rate selection
+- Multiple test-case verification
+- Improved receiver oversampling
 
 ## Author
 
-UART Communication Controller project in Verilog for learning and simulation practice.
+Bhuvan Malhotra
