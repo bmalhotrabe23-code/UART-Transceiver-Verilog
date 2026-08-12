@@ -1,71 +1,108 @@
-module uart_rx (
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 16.07.2026 13:34:23
+// Design Name: 
+// Module Name: uart_rx_2
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module uart_rx_2(
     input clk,
     input reset,
     input rx,
-    input tick,
-    output reg [7:0] rx_data,
-    output reg rx_done
+    input baud_tick,
+    output reg [7:0] rx_out_byte,
+    output rx_done
 );
 
-    parameter IDLE = 3'b000;
-    parameter START = 3'b001;
-    parameter DATA = 3'b010;
-    parameter STOP = 3'b011;
-    parameter DONE = 3'b100;
-
-    reg [2:0] state;
-    reg [2:0] bit_index;
-
-    always @(posedge clk or posedge reset) begin
-        if(reset) begin
-            state <= IDLE;
-            rx_data <= 0;
-            rx_done <= 0;
-            bit_index <= 0;
-        end else begin 
-            case (state)
-
-                IDLE: begin
-                    rx_done <= 0;
-                    if(rx == 0)  //start bit detected
-                        state <= START;
-                end
-
-                START: begin
-                    if (tick) begin
-                        if (rx == 0) begin   // confirm start bit
-                            state <= DATA;
-                            bit_index <= 0;
-                        end else begin
-                            state <= IDLE;   // false start
-                        end
-                    end
-                end
-
-                DATA: begin
-                    if (tick) begin
-                        rx_data[bit_index] <= rx;
-                        if(bit_index == 7)
-                            state <= STOP;
-                        else 
-                            bit_index <= bit_index + 1;
-                    end
-                end
-
-                STOP: begin
-                    if (tick) begin
-                        state <= DONE;
-                    end
-                end
-
-                DONE: begin
-                    rx_done <= 1;
-                    state <= IDLE;
-                end
-
+    // parameters 
+    parameter   IDLE = 0,
+                START = 1,
+                BIT0 = 2,
+                BIT1 = 3,
+                BIT2 = 4,
+                BIT3 = 5,
+                BIT4 = 6,
+                BIT5 = 7,
+                BIT6 = 8,
+                BIT7 = 9,
+                STOP = 10,
+                DONE = 11;     
+                
+                
+    reg [3:0] cs,ns;
+    
+    // controller code FSM
+    
+    // state flip flop
+    
+    always @(posedge clk)
+        begin
+            if (reset)
+                cs <= IDLE;
+            else 
+                cs <= ns;
+        end              
+        
+    
+    // state transition logic 
+    
+    always @(*)
+        begin
+            case (cs)
+                IDLE : ns = rx ? IDLE : START;
+                START : ns = baud_tick ? BIT0 : START;
+                BIT0 : ns = baud_tick ? BIT1 : BIT0;
+                BIT1 : ns = baud_tick ? BIT2 : BIT1;
+                BIT2 : ns = baud_tick ? BIT3 : BIT2;
+                BIT3 : ns = baud_tick ? BIT4 : BIT3;
+                BIT4 : ns = baud_tick ? BIT5 : BIT4;
+                BIT5 : ns = baud_tick ? BIT6 : BIT5;
+                BIT6 : ns = baud_tick ? BIT7 : BIT6;
+                BIT7 : ns = baud_tick ? STOP : BIT7;
+                STOP : ns = baud_tick ? DONE : STOP;
+                DONE : ns = rx ? IDLE : START;
+                default : ns = IDLE;
             endcase
-        end
-    end
-
+        end    
+        
+    // DATAPATH 
+    
+    //output logic 
+    
+    always @(posedge clk)
+        begin
+            if (reset)
+                rx_out_byte <= 0;
+            else 
+                begin
+                    case (cs)
+                        BIT0 : rx_out_byte[0] <= rx;
+                        BIT1 : rx_out_byte[1] <= rx;
+                        BIT2 : rx_out_byte[2] <= rx;
+                        BIT3 : rx_out_byte[3] <= rx;
+                        BIT4 : rx_out_byte[4] <= rx;
+                        BIT5 : rx_out_byte[5] <= rx;
+                        BIT6 : rx_out_byte[6] <= rx;
+                        BIT7 : rx_out_byte[7] <= rx;
+                    endcase
+                end
+        end    
+    
+    assign rx_done = (cs == DONE);    
+     
 endmodule
-
