@@ -1,84 +1,107 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 16.07.2026 16:43:03
+// Design Name: 
+// Module Name: uart_tb
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
 
 module uart_tb;
 
     reg clk;
     reg reset;
-    reg tx_start;
     reg [7:0] tx_data;
-
+    reg tx_start;
+    
+    wire baud_tick;
     wire tx;
-    wire tx_busy;
-    wire tick;
-
+    wire tx_done;
+    
     wire rx;
-    assign rx = tx;
-
-    wire [7:0] rx_data;
+    wire [7:0] rx_out_byte;
     wire rx_done;
-
-    baud_gen bg (
+    
+    assign rx = tx;
+    
+    // instantiating baud rate generator 
+    baud_rate_gneraor_for_tx_Rx_2 bg(
         .clk(clk),
         .reset(reset),
-        .tick(tick)
+        .baud_tick(baud_tick)
     );
-
-    // Instantiate UART TX
-    uart_tx uut (
+    
+    // instantiating the transmitter 
+    
+    uart_tx_2nd uut(
         .clk(clk),
         .reset(reset),
-        .tx_start(tx_start),
         .tx_data(tx_data),
-        .tick(tick),
-        .tx(tx),
-        .tx_busy(tx_busy)
+        .tx_start(tx_start),
+        .baud_tick(baud_tick),
+        .tx_done(tx_done),
+        .tx(tx)                    
     );
-
-    //Instantiate UART rx
-    uart_rx rx_unit (
+    
+    
+    // instantiating the receiver module 
+    
+    uart_rx_2 rx_unit(
         .clk(clk),
         .reset(reset),
+        .baud_tick(baud_tick),
         .rx(rx),
-        .tick(tick),
-        .rx_data(rx_data),
+        .rx_out_byte(rx_out_byte),
         .rx_done(rx_done)
     );
-
-    // Clock generation (10ns period)
+    
+    // clock generation
+    
     always #5 clk = ~clk;
-
-    initial begin
-        // Initialize
-        clk = 0;
-        reset = 1;
-        tx_start = 0;
-        tx_data = 8'b10101100;
-
-        // Reset pulse
-        #10 reset = 0;
-
-        // Start transmission
-        #10 tx_start = 1;
-        #10 tx_start = 0;
-
-        // Wait for the receiver to finish and check the received byte.
-        @(posedge rx_done);
-        #1;
-        if (rx_data == tx_data)
-            $display("PASS: rx_data = %b, tx_data = %b", rx_data, tx_data);
-        else
-            $display("FAIL: rx_data = %b, tx_data = %b", rx_data, tx_data);
-
-        // Small delay so the result is visible before ending simulation.
-        #20;
-
-        $finish;
-    end
-
-    // Dump waveform
-    initial begin
-        $dumpfile("wave.vcd");
-        $dumpvars(0, uart_tb);
-    end
-
+    
+    // the main excitation and verification logic 
+    initial 
+        begin
+            // initialize to 0
+            clk = 0;
+            reset = 1;
+            tx_start = 0;
+            tx_data = 8'b10101100;
+            
+            // reset pulse 
+            #10 reset = 0;
+            
+            //start transmission
+            #10 tx_start = 1;
+            #10 tx_start = 0;
+            
+            // wait for the receiver to finish and check the received bytes 
+            
+            @(posedge rx_done);
+            #1;
+            if (rx_out_byte == tx_data)
+                $display("PASS : rx_out_byte = %b , tx_data = %b",rx_out_byte,tx_data);
+            else 
+                $display("FAIL : rx_out_byte = %b , tx_data = %b",rx_out_byte,tx_data);
+            // small delay so that th eresults are visible 
+            
+            #20;
+            
+            $finish;
+            
+        end
+    
 endmodule
